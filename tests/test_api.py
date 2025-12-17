@@ -16,7 +16,6 @@ See: docs/09-testing.md for detailed test specifications.
 """
 
 
-
 class TestModerateEndpoint:
     """Tests for /moderate endpoint."""
 
