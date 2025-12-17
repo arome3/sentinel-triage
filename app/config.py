@@ -35,90 +35,73 @@ class Settings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=False,
-        extra="ignore"  # Ignore unknown env vars
+        extra="ignore",  # Ignore unknown env vars
     )
 
     openai_api_key: SecretStr = Field(
-        ...,  # Required
-        description="OpenAI API key for embeddings"
+        ..., description="OpenAI API key for embeddings"  # Required
     )
 
     groq_api_key: SecretStr = Field(
-        ...,  # Required
-        description="Groq API key for Llama inference"
+        ..., description="Groq API key for Llama inference"  # Required
     )
 
     deepseek_api_key: SecretStr | None = Field(
-        default=None,
-        description="DeepSeek API key for Tier 2 reasoning (optional)"
+        default=None, description="DeepSeek API key for Tier 2 reasoning (optional)"
     )
 
     similarity_threshold: float = Field(
         default=0.5,
         ge=0.0,
         le=1.0,
-        description="Minimum similarity score for route matching (0.0-1.0)"
+        description="Minimum similarity score for route matching (0.0-1.0)",
     )
 
     default_route: str = Field(
         default="obvious_safe",
-        description="Fallback route when no confident match is found"
+        description="Fallback route when no confident match is found",
     )
 
     fallback_model: str = Field(
-        default="llama-3.1-8b",
-        description="Model to use when routing fails entirely"
+        default="llama-3.1-8b", description="Model to use when routing fails entirely"
     )
 
     embedding_model: str = Field(
         default="BAAI/bge-small-en-v1.5",
-        description="FastEmbed model for local semantic routing (ONNX Runtime)"
+        description="FastEmbed model for local semantic routing (ONNX Runtime)",
     )
 
     embedding_dimensions: int = Field(
         default=384,  # bge-small-en-v1.5 produces 384-dimensional vectors
-        description="Embedding vector dimensions"
+        description="Embedding vector dimensions",
     )
 
     embedding_cache_dir: str | None = Field(
         default=None,
-        description="Directory to cache embedding model (default: fastembed cache)"
+        description="Directory to cache embedding model (default: fastembed cache)",
     )
 
     embedding_threads: int | None = Field(
-        default=None,
-        description="CPU threads for embedding (default: auto-detect)"
+        default=None, description="CPU threads for embedding (default: auto-detect)"
     )
 
     track_costs: bool = Field(
-        default=True,
-        description="Enable cost calculation and logging"
+        default=True, description="Enable cost calculation and logging"
     )
 
     gpt4o_cost_per_1m: float = Field(
-        default=5.00,
-        description="GPT-4o cost per 1M tokens (baseline for comparison)"
+        default=5.00, description="GPT-4o cost per 1M tokens (baseline for comparison)"
     )
 
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = Field(
-        default="INFO",
-        description="Application log level"
+        default="INFO", description="Application log level"
     )
 
-    host: str = Field(
-        default="0.0.0.0",
-        description="Server bind host"
-    )
+    host: str = Field(default="0.0.0.0", description="Server bind host")
 
-    port: int = Field(
-        default=8000,
-        description="Server bind port"
-    )
+    port: int = Field(default=8000, description="Server bind port")
 
-    debug: bool = Field(
-        default=False,
-        description="Enable debug mode"
-    )
+    debug: bool = Field(default=False, description="Enable debug mode")
 
     @field_validator("default_route")
     @classmethod
@@ -129,7 +112,7 @@ class Settings(BaseSettings):
             "obvious_safe",
             "ambiguous_risk",
             "system_attack",
-            "non_english"
+            "non_english",
         }
         if v not in valid_routes:
             raise ValueError(f"default_route must be one of {valid_routes}")
@@ -164,7 +147,7 @@ def configure_logging(settings: Settings) -> None:
         level=getattr(logging, settings.log_level),
         format="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
-        handlers=[logging.StreamHandler(sys.stdout)]
+        handlers=[logging.StreamHandler(sys.stdout)],
     )
 
     logging.getLogger("httpx").setLevel(logging.WARNING)

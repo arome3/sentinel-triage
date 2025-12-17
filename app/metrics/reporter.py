@@ -9,11 +9,7 @@ Pydantic schemas used by the REST API.
 """
 
 from app.metrics.store import get_metrics_store, MetricsStore
-from app.schemas.moderation import (
-    MetricsResponse,
-    RouteMetrics,
-    ModelMetrics
-)
+from app.schemas.moderation import MetricsResponse, RouteMetrics, ModelMetrics
 
 
 class MetricsReporter:
@@ -60,13 +56,9 @@ class MetricsReporter:
                 route_name=route_name,
                 request_count=route_data.count,
                 avg_confidence=(
-                    sum(confidences) / len(confidences)
-                    if confidences else 0.0
+                    sum(confidences) / len(confidences) if confidences else 0.0
                 ),
-                avg_latency_ms=(
-                    sum(latencies) / len(latencies)
-                    if latencies else 0.0
-                )
+                avg_latency_ms=(sum(latencies) / len(latencies) if latencies else 0.0),
             )
 
         models: dict[str, ModelMetrics] = {}
@@ -78,27 +70,27 @@ class MetricsReporter:
                 request_count=model_data.count,
                 total_tokens=model_data.total_tokens,
                 total_cost_usd=model_data.total_cost,
-                avg_latency_ms=(
-                    sum(latencies) / len(latencies)
-                    if latencies else 0.0
-                )
+                avg_latency_ms=(sum(latencies) / len(latencies) if latencies else 0.0),
             )
 
         if agg.total_hypothetical_cost > 0:
             savings_percent = (
-                (agg.total_hypothetical_cost - agg.total_actual_cost) /
-                agg.total_hypothetical_cost * 100
+                (agg.total_hypothetical_cost - agg.total_actual_cost)
+                / agg.total_hypothetical_cost
+                * 100
             )
         else:
             savings_percent = 0.0
 
         avg_routing = (
             sum(agg.routing_latencies) / len(agg.routing_latencies)
-            if agg.routing_latencies else 0.0
+            if agg.routing_latencies
+            else 0.0
         )
         avg_inference = (
             sum(agg.inference_latencies) / len(agg.inference_latencies)
-            if agg.inference_latencies else 0.0
+            if agg.inference_latencies
+            else 0.0
         )
 
         return MetricsResponse(
@@ -109,7 +101,7 @@ class MetricsReporter:
             hypothetical_cost_usd=round(agg.total_hypothetical_cost, 6),
             cost_savings_percent=round(savings_percent, 2),
             avg_routing_latency_ms=round(avg_routing, 2),
-            avg_inference_latency_ms=round(avg_inference, 2)
+            avg_inference_latency_ms=round(avg_inference, 2),
         )
 
     def get_tier_distribution(self) -> dict[str, float]:
@@ -130,7 +122,7 @@ class MetricsReporter:
             "llama-3.1-8b": "tier1",
             "gpt-4o": "tier2",
             "llama-guard-4": "specialist",
-            "llama-4-maverick": "specialist"
+            "llama-4-maverick": "specialist",
         }
 
         for model_id, model_data in agg.requests_by_model.items():
@@ -142,8 +134,7 @@ class MetricsReporter:
             return {"tier1": 0.0, "tier2": 0.0, "specialist": 0.0}
 
         return {
-            tier: round(count / total * 100, 1)
-            for tier, count in tier_counts.items()
+            tier: round(count / total * 100, 1) for tier, count in tier_counts.items()
         }
 
     def get_verdict_distribution(self) -> dict[str, int]:

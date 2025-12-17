@@ -9,7 +9,6 @@ The store is thread-safe using threading.Lock to handle
 concurrent requests in FastAPI's async environment.
 """
 
-import time
 import threading
 from dataclasses import dataclass, field
 from collections import defaultdict
@@ -184,7 +183,7 @@ class MetricsStore:
         with self._lock:
             self._metrics.append(metric)
             if len(self._metrics) > self._max_history:
-                self._metrics = self._metrics[-self._max_history:]
+                self._metrics = self._metrics[-self._max_history :]
 
             self._total_requests += 1
             self._total_actual_cost += metric.actual_cost_usd
@@ -207,9 +206,11 @@ class MetricsStore:
             self._inference_latencies.append(metric.inference_latency_ms)
 
             if len(self._routing_latencies) > self._max_history:
-                self._routing_latencies = self._routing_latencies[-self._max_history:]
+                self._routing_latencies = self._routing_latencies[-self._max_history :]
             if len(self._inference_latencies) > self._max_history:
-                self._inference_latencies = self._inference_latencies[-self._max_history:]
+                self._inference_latencies = self._inference_latencies[
+                    -self._max_history :
+                ]
 
             self._verdicts[metric.verdict] += 1
 
@@ -228,7 +229,7 @@ class MetricsStore:
                 route: _RouteAggregate(
                     count=agg.count,
                     confidences=list(agg.confidences),
-                    latencies=list(agg.latencies)
+                    latencies=list(agg.latencies),
                 )
                 for route, agg in self._by_route.items()
             }
@@ -238,7 +239,7 @@ class MetricsStore:
                     count=agg.count,
                     total_tokens=agg.total_tokens,
                     total_cost=agg.total_cost,
-                    latencies=list(agg.latencies)
+                    latencies=list(agg.latencies),
                 )
                 for model, agg in self._by_model.items()
             }
@@ -253,7 +254,7 @@ class MetricsStore:
                 requests_by_model=by_model_copy,
                 routing_latencies=list(self._routing_latencies),
                 inference_latencies=list(self._inference_latencies),
-                verdicts=dict(self._verdicts)
+                verdicts=dict(self._verdicts),
             )
 
     def get_recent(self, count: int = 100) -> list[RequestMetric]:

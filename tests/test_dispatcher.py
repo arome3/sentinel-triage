@@ -40,7 +40,9 @@ class TestResponseParsing:
 
     def test_parse_json_with_reasoning(self):
         """Parse JSON response with reasoning field."""
-        response = '{"verdict": "flagged", "confidence": 0.8, "reasoning": "Contains spam"}'
+        response = (
+            '{"verdict": "flagged", "confidence": 0.8, "reasoning": "Contains spam"}'
+        )
         result = _parse_model_response(response)
 
         assert result["verdict"] == "flagged"
@@ -49,10 +51,10 @@ class TestResponseParsing:
 
     def test_parse_json_in_code_block(self):
         """Parse JSON wrapped in markdown code block."""
-        response = '''Here's my analysis:
+        response = """Here's my analysis:
 ```json
 {"verdict": "flagged", "confidence": 0.8, "reasoning": "Contains spam indicators"}
-```'''
+```"""
         result = _parse_model_response(response)
 
         assert result["verdict"] == "flagged"
@@ -60,10 +62,10 @@ class TestResponseParsing:
 
     def test_parse_json_in_plain_code_block(self):
         """Parse JSON in code block without language identifier."""
-        response = '''Analysis:
+        response = """Analysis:
 ```
 {"verdict": "safe", "confidence": 0.9}
-```'''
+```"""
         result = _parse_model_response(response)
 
         assert result["verdict"] == "safe"
@@ -137,13 +139,13 @@ class TestResponseParsing:
 
     def test_parse_complex_json_response(self):
         """Parse complex JSON with extra fields."""
-        response = '''{
+        response = """{
             "verdict": "flagged",
             "confidence": 0.85,
             "reasoning": "Detected sarcasm",
             "detected_patterns": ["sarcasm", "irony"],
             "extra_field": "ignored"
-        }'''
+        }"""
         result = _parse_model_response(response)
 
         assert result["verdict"] == "flagged"
@@ -190,7 +192,7 @@ class TestDispatchResult:
             provider="groq",
             latency_ms=150.0,
             tokens=TokenUsage(100, 50),
-            error=None
+            error=None,
         )
         assert result.success is True
 
@@ -204,7 +206,7 @@ class TestDispatchResult:
             provider="groq",
             latency_ms=100.0,
             tokens=TokenUsage(0, 0),
-            error="API Error: Rate limited"
+            error="API Error: Rate limited",
         )
         assert result.success is False
 
@@ -218,7 +220,7 @@ class TestDispatchResult:
             provider="openai",
             latency_ms=2500.0,
             tokens=TokenUsage(200, 150),
-            raw_response={"verdict": "flagged"}
+            raw_response={"verdict": "flagged"},
         )
 
         assert result.reasoning is not None
@@ -233,7 +235,7 @@ class TestDispatchResult:
             reasoning=None,
             model_used="llama-3.1-8b",
             provider="groq",
-            latency_ms=150.0
+            latency_ms=150.0,
         )
 
         assert result.tokens.input_tokens == 0
@@ -354,7 +356,9 @@ class TestDispatch:
             assert result.success
 
     @pytest.mark.asyncio
-    async def test_dispatch_extracts_token_usage(self, mock_provider_clients, tier1_model):
+    async def test_dispatch_extracts_token_usage(
+        self, mock_provider_clients, tier1_model
+    ):
         """Dispatch extracts token usage from response."""
         with patch("app.dispatcher.handlers.get_clients") as mock_get:
             mock_get.return_value = mock_provider_clients
@@ -374,7 +378,9 @@ class TestDispatchRetry:
     """Tests for dispatch retry logic."""
 
     @pytest.mark.asyncio
-    async def test_retry_succeeds_on_first_attempt(self, mock_provider_clients, tier1_model):
+    async def test_retry_succeeds_on_first_attempt(
+        self, mock_provider_clients, tier1_model
+    ):
         """Successful first attempt returns immediately."""
         with patch("app.dispatcher.handlers.get_clients") as mock_get:
             mock_get.return_value = mock_provider_clients
@@ -390,7 +396,9 @@ class TestDispatchRetry:
         """Retry recovers from transient error."""
         mock_response = MagicMock()
         mock_response.choices = [
-            MagicMock(message=MagicMock(content='{"verdict": "safe", "confidence": 0.9}'))
+            MagicMock(
+                message=MagicMock(content='{"verdict": "safe", "confidence": 0.9}')
+            )
         ]
         mock_response.usage = MagicMock(prompt_tokens=100, completion_tokens=50)
 
@@ -450,7 +458,9 @@ class TestProviderSpecificBehavior:
             await dispatch(tier1_model, "test content")
 
             # Verify response_format was set
-            call_kwargs = mock_provider_clients.groq.chat.completions.create.call_args.kwargs
+            call_kwargs = (
+                mock_provider_clients.groq.chat.completions.create.call_args.kwargs
+            )
             assert call_kwargs["response_format"] == {"type": "json_object"}
 
     @pytest.mark.asyncio
@@ -462,18 +472,24 @@ class TestProviderSpecificBehavior:
             await dispatch(tier2_model, "test content")
 
             # Verify response_format was set
-            call_kwargs = mock_provider_clients.openai.chat.completions.create.call_args.kwargs
+            call_kwargs = (
+                mock_provider_clients.openai.chat.completions.create.call_args.kwargs
+            )
             assert call_kwargs["response_format"] == {"type": "json_object"}
 
     @pytest.mark.asyncio
-    async def test_dispatch_uses_model_system_prompt(self, mock_provider_clients, tier1_model):
+    async def test_dispatch_uses_model_system_prompt(
+        self, mock_provider_clients, tier1_model
+    ):
         """Verify dispatch includes model's system prompt."""
         with patch("app.dispatcher.handlers.get_clients") as mock_get:
             mock_get.return_value = mock_provider_clients
 
             await dispatch(tier1_model, "test content")
 
-            call_kwargs = mock_provider_clients.groq.chat.completions.create.call_args.kwargs
+            call_kwargs = (
+                mock_provider_clients.groq.chat.completions.create.call_args.kwargs
+            )
             messages = call_kwargs["messages"]
 
             assert len(messages) == 2
@@ -482,23 +498,31 @@ class TestProviderSpecificBehavior:
             assert messages[1]["content"] == "test content"
 
     @pytest.mark.asyncio
-    async def test_dispatch_respects_model_max_tokens(self, mock_provider_clients, tier1_model):
+    async def test_dispatch_respects_model_max_tokens(
+        self, mock_provider_clients, tier1_model
+    ):
         """Verify dispatch uses model's max_tokens setting."""
         with patch("app.dispatcher.handlers.get_clients") as mock_get:
             mock_get.return_value = mock_provider_clients
 
             await dispatch(tier1_model, "test content")
 
-            call_kwargs = mock_provider_clients.groq.chat.completions.create.call_args.kwargs
+            call_kwargs = (
+                mock_provider_clients.groq.chat.completions.create.call_args.kwargs
+            )
             assert call_kwargs["max_tokens"] == tier1_model.max_tokens
 
     @pytest.mark.asyncio
-    async def test_dispatch_respects_model_temperature(self, mock_provider_clients, tier1_model):
+    async def test_dispatch_respects_model_temperature(
+        self, mock_provider_clients, tier1_model
+    ):
         """Verify dispatch uses model's temperature setting."""
         with patch("app.dispatcher.handlers.get_clients") as mock_get:
             mock_get.return_value = mock_provider_clients
 
             await dispatch(tier1_model, "test content")
 
-            call_kwargs = mock_provider_clients.groq.chat.completions.create.call_args.kwargs
+            call_kwargs = (
+                mock_provider_clients.groq.chat.completions.create.call_args.kwargs
+            )
             assert call_kwargs["temperature"] == tier1_model.temperature

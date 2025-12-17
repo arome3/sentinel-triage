@@ -114,25 +114,31 @@ class ValidationResult:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 
-VALID_ROUTES = frozenset({
-    "obvious_safe",
-    "obvious_harm",
-    "ambiguous_risk",
-    "system_attack",
-    "non_english",
-})
+VALID_ROUTES = frozenset(
+    {
+        "obvious_safe",
+        "obvious_harm",
+        "ambiguous_risk",
+        "system_attack",
+        "non_english",
+    }
+)
 
-VALID_VERDICTS = frozenset({
-    "safe",
-    "flagged",
-    "requires_review",
-})
+VALID_VERDICTS = frozenset(
+    {
+        "safe",
+        "flagged",
+        "requires_review",
+    }
+)
 
-VALID_DIFFICULTIES = frozenset({
-    "easy",
-    "medium",
-    "hard",
-})
+VALID_DIFFICULTIES = frozenset(
+    {
+        "easy",
+        "medium",
+        "hard",
+    }
+)
 
 # Target distribution percentages
 TARGET_DISTRIBUTION = {
@@ -238,7 +244,9 @@ class DatasetLoader:
                 )
             samples_data = data.get("samples", [])
         else:
-            raise ValueError(f"Invalid dataset format: expected list or dict, got {type(data)}")
+            raise ValueError(
+                f"Invalid dataset format: expected list or dict, got {type(data)}"
+            )
 
         self._samples = []
         for i, sample_data in enumerate(samples_data):
@@ -247,7 +255,9 @@ class DatasetLoader:
                     id=str(sample_data.get("id", f"sample-{i:03d}")),
                     content=sample_data["content"],
                     expected_route=sample_data["expected_route"],
-                    expected_verdict=sample_data.get("expected_verdict", "requires_review"),
+                    expected_verdict=sample_data.get(
+                        "expected_verdict", "requires_review"
+                    ),
                     category=sample_data.get("category", "unknown"),
                     difficulty=sample_data.get("difficulty", "medium"),
                     notes=sample_data.get("notes"),

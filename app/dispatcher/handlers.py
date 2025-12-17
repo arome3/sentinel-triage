@@ -370,7 +370,7 @@ async def dispatch_deepseek(model: ModelMetadata, content: str) -> DispatchResul
     Returns:
         DispatchResult with error indicating DeepSeek is not configured.
     """
-    logger.warning(f"DeepSeek dispatch requested but not configured")
+    logger.warning("DeepSeek dispatch requested but not configured")
 
     return DispatchResult(
         verdict="requires_review",

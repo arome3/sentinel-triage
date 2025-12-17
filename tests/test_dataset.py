@@ -98,17 +98,17 @@ class TestDatasetStructure:
     def test_samples_are_sample_objects(self, samples):
         """Verify all samples are Sample dataclass instances."""
         for sample in samples:
-            assert isinstance(sample, Sample), (
-                f"Expected Sample, got {type(sample)}"
-            )
+            assert isinstance(sample, Sample), f"Expected Sample, got {type(sample)}"
 
     def test_samples_have_required_fields(self, samples):
         """Verify all samples have required fields populated."""
         for sample in samples:
-            assert sample.id, f"Sample missing id"
+            assert sample.id, "Sample missing id"
             assert sample.content, f"Sample {sample.id} missing content"
             assert sample.expected_route, f"Sample {sample.id} missing expected_route"
-            assert sample.expected_verdict, f"Sample {sample.id} missing expected_verdict"
+            assert (
+                sample.expected_verdict
+            ), f"Sample {sample.id} missing expected_verdict"
             assert sample.category, f"Sample {sample.id} missing category"
             assert sample.difficulty, f"Sample {sample.id} missing difficulty"
 
@@ -116,9 +116,9 @@ class TestDatasetStructure:
         """Verify no duplicate sample IDs."""
         ids = [s.id for s in samples]
         duplicates = [id for id in ids if ids.count(id) > 1]
-        assert len(ids) == len(set(ids)), (
-            f"Duplicate sample IDs found: {set(duplicates)}"
-        )
+        assert len(ids) == len(
+            set(ids)
+        ), f"Duplicate sample IDs found: {set(duplicates)}"
 
     def test_expected_routes_are_valid(self, samples):
         """Verify all expected_route values are valid route names."""

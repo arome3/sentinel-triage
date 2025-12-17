@@ -15,7 +15,7 @@ See: docs/09-testing.md for detailed test specifications.
 import pytest
 
 from app.metrics.cost import CostCalculator, CostBreakdown, get_cost_calculator
-from app.registry.models import get_model_registry, ModelTier
+from app.registry.models import get_model_registry
 
 
 class TestCostBreakdown:
@@ -32,7 +32,7 @@ class TestCostBreakdown:
             hypothetical_cost_usd=0.01,
             savings_usd=0.00985,
             savings_percent=98.5,
-            model_used="llama-3.1-8b"
+            model_used="llama-3.1-8b",
         )
 
         assert breakdown.total_tokens == 150
@@ -48,7 +48,7 @@ class TestCostBreakdown:
             hypothetical_cost_usd=0.0025,
             savings_usd=0.002482,
             savings_percent=99.28,
-            model_used="llama-3.1-8b"
+            model_used="llama-3.1-8b",
         )
 
         assert breakdown.input_tokens == 200
@@ -72,9 +72,7 @@ class TestCostCalculator:
     def test_tier1_cost_calculation(self, calculator, tier1_model):
         """Tier 1 model cost is calculated correctly."""
         breakdown = calculator.calculate(
-            model=tier1_model,
-            input_tokens=1000,
-            output_tokens=500
+            model=tier1_model, input_tokens=1000, output_tokens=500
         )
 
         # Expected: (1000/1M * 0.05) + (500/1M * 0.08) = 0.00009
@@ -89,9 +87,7 @@ class TestCostCalculator:
     def test_tier2_cost_calculation(self, calculator, tier2_model):
         """Tier 2 model cost is calculated correctly."""
         breakdown = calculator.calculate(
-            model=tier2_model,
-            input_tokens=1000,
-            output_tokens=500
+            model=tier2_model, input_tokens=1000, output_tokens=500
         )
 
         # Expected: (1000/1M * 5.00) + (500/1M * 15.00) = 0.0125
@@ -104,9 +100,7 @@ class TestCostCalculator:
     def test_guard_model_cost_calculation(self, calculator, guard_model):
         """Specialist guard model cost is calculated correctly."""
         breakdown = calculator.calculate(
-            model=guard_model,
-            input_tokens=1000,
-            output_tokens=500
+            model=guard_model, input_tokens=1000, output_tokens=500
         )
 
         # Expected: (1000/1M * 0.20) + (500/1M * 0.20) = 0.0003
@@ -117,9 +111,7 @@ class TestCostCalculator:
     def test_multilingual_model_cost_calculation(self, calculator, multilingual_model):
         """Multilingual model cost is calculated correctly."""
         breakdown = calculator.calculate(
-            model=multilingual_model,
-            input_tokens=1000,
-            output_tokens=500
+            model=multilingual_model, input_tokens=1000, output_tokens=500
         )
 
         # Expected: (1000/1M * 0.20) + (500/1M * 0.60) = 0.0005
@@ -132,9 +124,7 @@ class TestCostCalculator:
     def test_zero_tokens_returns_zero_cost(self, calculator, tier1_model):
         """Zero tokens results in zero cost."""
         breakdown = calculator.calculate(
-            model=tier1_model,
-            input_tokens=0,
-            output_tokens=0
+            model=tier1_model, input_tokens=0, output_tokens=0
         )
 
         assert breakdown.actual_cost_usd == 0.0
@@ -145,22 +135,20 @@ class TestCostCalculator:
     def test_hypothetical_cost_uses_gpt4o_baseline(self, calculator, tier1_model):
         """Hypothetical cost uses GPT-4o pricing."""
         breakdown = calculator.calculate(
-            model=tier1_model,
-            input_tokens=1000,
-            output_tokens=500
+            model=tier1_model, input_tokens=1000, output_tokens=500
         )
 
         # Hypothetical: (1000/1M * 5.00) + (500/1M * 15.00) = 0.0125
         expected_hypothetical = (1000 / 1_000_000 * 5.00) + (500 / 1_000_000 * 15.00)
 
-        assert breakdown.hypothetical_cost_usd == pytest.approx(expected_hypothetical, rel=0.01)
+        assert breakdown.hypothetical_cost_usd == pytest.approx(
+            expected_hypothetical, rel=0.01
+        )
 
     def test_savings_calculation_tier1_vs_baseline(self, calculator, tier1_model):
         """Savings percentage for Tier 1 vs GPT-4o baseline."""
         breakdown = calculator.calculate(
-            model=tier1_model,
-            input_tokens=1000,
-            output_tokens=500
+            model=tier1_model, input_tokens=1000, output_tokens=500
         )
 
         # Tier 1 should have >99% savings vs GPT-4o baseline
@@ -172,9 +160,7 @@ class TestCostCalculator:
     def test_tier2_has_zero_savings(self, calculator, tier2_model):
         """Tier 2 (GPT-4o) has 0% savings vs baseline."""
         breakdown = calculator.calculate(
-            model=tier2_model,
-            input_tokens=1000,
-            output_tokens=500
+            model=tier2_model, input_tokens=1000, output_tokens=500
         )
 
         # GPT-4o is the baseline, so savings should be ~0%
@@ -186,9 +172,7 @@ class TestCostCalculator:
     def test_calculate_by_model_id(self, calculator):
         """Calculate cost using model ID lookup."""
         breakdown = calculator.calculate_by_model_id(
-            model_id="llama-3.1-8b",
-            input_tokens=1000,
-            output_tokens=500
+            model_id="llama-3.1-8b", input_tokens=1000, output_tokens=500
         )
 
         assert breakdown is not None
@@ -198,9 +182,7 @@ class TestCostCalculator:
     def test_calculate_by_model_id_not_found(self, calculator):
         """Returns None for unknown model ID."""
         breakdown = calculator.calculate_by_model_id(
-            model_id="nonexistent-model",
-            input_tokens=1000,
-            output_tokens=500
+            model_id="nonexistent-model", input_tokens=1000, output_tokens=500
         )
 
         assert breakdown is None
@@ -288,7 +270,9 @@ class TestSavingsValidation:
 
         savings_percent = (total_hypothetical - total_actual) / total_hypothetical * 100
 
-        assert savings_percent > 60.0, f"80/20 mix achieved only {savings_percent:.1f}% savings"
+        assert (
+            savings_percent > 60.0
+        ), f"80/20 mix achieved only {savings_percent:.1f}% savings"
 
     def test_worst_case_all_tier2(self):
         """100% Tier 2 traffic has 0% savings."""

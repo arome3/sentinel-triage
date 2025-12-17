@@ -78,14 +78,11 @@ class CostCalculator:
         cost calculations.
         """
         self._settings = get_settings()
-        self._baseline_input_per_1m = 5.00   # $5/1M input tokens
+        self._baseline_input_per_1m = 5.00  # $5/1M input tokens
         self._baseline_output_per_1m = 15.00  # $15/1M output tokens
 
     def calculate(
-        self,
-        model: ModelMetadata,
-        input_tokens: int,
-        output_tokens: int
+        self, model: ModelMetadata, input_tokens: int, output_tokens: int
     ) -> CostBreakdown:
         """
         Calculate cost breakdown for a request.
@@ -107,7 +104,9 @@ class CostCalculator:
         hypothetical_cost = hypothetical_input + hypothetical_output
 
         savings_usd = hypothetical_cost - actual_cost
-        savings_percent = (savings_usd / hypothetical_cost * 100) if hypothetical_cost > 0 else 0.0
+        savings_percent = (
+            (savings_usd / hypothetical_cost * 100) if hypothetical_cost > 0 else 0.0
+        )
 
         return CostBreakdown(
             input_tokens=input_tokens,
@@ -118,14 +117,11 @@ class CostCalculator:
             hypothetical_cost_usd=hypothetical_cost,
             savings_usd=savings_usd,
             savings_percent=savings_percent,
-            model_used=model.model_id
+            model_used=model.model_id,
         )
 
     def calculate_by_model_id(
-        self,
-        model_id: str,
-        input_tokens: int,
-        output_tokens: int
+        self, model_id: str, input_tokens: int, output_tokens: int
     ) -> CostBreakdown | None:
         """
         Calculate cost using model ID lookup.

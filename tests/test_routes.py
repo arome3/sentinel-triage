@@ -70,12 +70,12 @@ class TestRouteDefinitions:
 
         for route in routes:
             for utterance in route.utterances:
-                assert isinstance(utterance, str), (
-                    f"Route '{route.name}' has non-string utterance: {utterance}"
-                )
-                assert len(utterance.strip()) > 0, (
-                    f"Route '{route.name}' has empty utterance"
-                )
+                assert isinstance(
+                    utterance, str
+                ), f"Route '{route.name}' has non-string utterance: {utterance}"
+                assert (
+                    len(utterance.strip()) > 0
+                ), f"Route '{route.name}' has empty utterance"
 
     def test_no_duplicate_utterances_within_route(self):
         """Verify no duplicate utterances within a single route."""
@@ -85,9 +85,9 @@ class TestRouteDefinitions:
             utterances = route.utterances
             unique_utterances = set(u.lower() for u in utterances)
 
-            assert len(utterances) == len(unique_utterances), (
-                f"Route '{route.name}' has duplicate utterances"
-            )
+            assert len(utterances) == len(
+                unique_utterances
+            ), f"Route '{route.name}' has duplicate utterances"
 
     def test_no_duplicate_utterances_across_routes(self):
         """Verify utterances don't appear in multiple routes."""
@@ -110,8 +110,8 @@ class TestRouteDefinitions:
 
         for route in routes:
             # Check required attributes
-            assert hasattr(route, 'name'), "Route missing 'name' attribute"
-            assert hasattr(route, 'utterances'), "Route missing 'utterances' attribute"
+            assert hasattr(route, "name"), "Route missing 'name' attribute"
+            assert hasattr(route, "utterances"), "Route missing 'utterances' attribute"
 
             # Verify types
             assert isinstance(route.name, str)
@@ -151,7 +151,10 @@ class TestRouteClassification:
         ("Oh that's just perfect, genius", "ambiguous_risk"),
         ("I hope you get what you deserve", "ambiguous_risk"),
         ("Nice job breaking it, hero", "ambiguous_risk"),
-        ("I can't believe I wasted my money on this 'perfect' product", "ambiguous_risk"),
+        (
+            "I can't believe I wasted my money on this 'perfect' product",
+            "ambiguous_risk",
+        ),
     ]
 
     SYSTEM_ATTACK_CASES = [
@@ -171,20 +174,16 @@ class TestRouteClassification:
     ]
 
     ALL_CLASSIFICATION_CASES = (
-        OBVIOUS_HARM_CASES +
-        OBVIOUS_SAFE_CASES +
-        AMBIGUOUS_RISK_CASES +
-        SYSTEM_ATTACK_CASES +
-        NON_ENGLISH_CASES
+        OBVIOUS_HARM_CASES
+        + OBVIOUS_SAFE_CASES
+        + AMBIGUOUS_RISK_CASES
+        + SYSTEM_ATTACK_CASES
+        + NON_ENGLISH_CASES
     )
 
     @pytest.mark.parametrize("content,expected_route", ALL_CLASSIFICATION_CASES)
     def test_classification_expected_route(
-        self,
-        content: str,
-        expected_route: str,
-        mock_router_engine,
-        mock_route_result
+        self, content: str, expected_route: str, mock_router_engine, mock_route_result
     ):
         """
         Test that content matches expected route (using mock).
@@ -205,7 +204,7 @@ class TestRouteClassification:
             route_name="obvious_safe",
             confidence=0.85,
             latency_ms=35.0,
-            fallback_used=False
+            fallback_used=False,
         )
 
         assert result.route_name == "obvious_safe"
@@ -221,7 +220,7 @@ class TestRouteClassification:
             route_name="obvious_harm",
             confidence=0.92,
             latency_ms=42.5,
-            fallback_used=False
+            fallback_used=False,
         )
 
         result_dict = result.to_dict()
@@ -241,17 +240,13 @@ class TestRouteConfidence:
 
         # Test upper bound
         high_confidence = RouteChoice(
-            route_name="test",
-            confidence=1.5,
-            latency_ms=10.0
+            route_name="test", confidence=1.5, latency_ms=10.0
         )
         assert high_confidence.confidence == 1.0
 
         # Test lower bound
         low_confidence = RouteChoice(
-            route_name="test",
-            confidence=-0.5,
-            latency_ms=10.0
+            route_name="test", confidence=-0.5, latency_ms=10.0
         )
         assert low_confidence.confidence == 0.0
 
@@ -259,17 +254,13 @@ class TestRouteConfidence:
         """Verify fallback_used flag works correctly."""
         # High confidence - no fallback
         high_result = mock_route_result(
-            route_name="obvious_safe",
-            confidence=0.9,
-            fallback_used=False
+            route_name="obvious_safe", confidence=0.9, fallback_used=False
         )
         assert not high_result.fallback_used
 
         # Low confidence - fallback used
         low_result = mock_route_result(
-            route_name="obvious_safe",
-            confidence=0.3,
-            fallback_used=True
+            route_name="obvious_safe", confidence=0.3, fallback_used=True
         )
         assert low_result.fallback_used
 
@@ -278,10 +269,7 @@ class TestRouteConfidence:
         from app.router.engine import RouteChoice
 
         no_match = RouteChoice(
-            route_name=None,
-            confidence=0.0,
-            latency_ms=25.0,
-            fallback_used=True
+            route_name=None, confidence=0.0, latency_ms=25.0, fallback_used=True
         )
 
         assert no_match.route_name is None
@@ -295,7 +283,7 @@ class TestRouteConfidence:
             route_name="obvious_safe",
             confidence=0.78,
             latency_ms=32.5,
-            fallback_used=False
+            fallback_used=False,
         )
 
         assert typical.route_name == "obvious_safe"
@@ -317,9 +305,7 @@ class TestRouteClassificationIntegration:
     @pytest.mark.asyncio
     async def test_obvious_harm_routes_correctly(self, initialized_router):
         """Test that obvious harm content routes to obvious_harm."""
-        result = await initialized_router.route(
-            "You are an idiot and this is spam"
-        )
+        result = await initialized_router.route("You are an idiot and this is spam")
 
         assert result.route_name == "obvious_harm"
         assert result.confidence > 0.5
@@ -327,9 +313,7 @@ class TestRouteClassificationIntegration:
     @pytest.mark.asyncio
     async def test_obvious_safe_routes_correctly(self, initialized_router):
         """Test that safe content routes to obvious_safe."""
-        result = await initialized_router.route(
-            "Thank you for the helpful article!"
-        )
+        result = await initialized_router.route("Thank you for the helpful article!")
 
         assert result.route_name == "obvious_safe"
         assert result.confidence > 0.5

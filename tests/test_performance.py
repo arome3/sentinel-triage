@@ -42,12 +42,12 @@ class TestRoutingLatency:
         elapsed_ms = (time.perf_counter() - start) * 1000
 
         # Check both measured and reported latency
-        assert result.latency_ms < 50, (
-            f"Reported routing latency {result.latency_ms:.1f}ms exceeds 50ms target"
-        )
-        assert elapsed_ms < 100, (  # Allow some margin for test overhead
-            f"Measured routing time {elapsed_ms:.1f}ms exceeds 100ms (including overhead)"
-        )
+        assert (
+            result.latency_ms < 50
+        ), f"Reported routing latency {result.latency_ms:.1f}ms exceeds 50ms target"
+        assert (
+            elapsed_ms < 100
+        ), f"Measured routing time {elapsed_ms:.1f}ms exceeds 100ms (including overhead)"  # Allow some margin for test overhead
 
     @pytest.mark.asyncio
     async def test_multiple_routes_consistent_latency(self, initialized_router):
@@ -101,13 +101,13 @@ class TestRoutingLatency:
             latencies.append(result.latency_ms)
 
         avg_latency = sum(latencies) / len(latencies)
-        variance = sum((l - avg_latency) ** 2 for l in latencies) / len(latencies)
-        std_dev = variance ** 0.5
+        variance = sum((lat - avg_latency) ** 2 for lat in latencies) / len(latencies)
+        std_dev = variance**0.5
 
         # Standard deviation should be small relative to mean
-        assert std_dev < avg_latency, (
-            f"High latency variance: std_dev={std_dev:.1f}ms, mean={avg_latency:.1f}ms"
-        )
+        assert (
+            std_dev < avg_latency
+        ), f"High latency variance: std_dev={std_dev:.1f}ms, mean={avg_latency:.1f}ms"
 
 
 @pytest.mark.slow
@@ -126,9 +126,9 @@ class TestBatchPerformance:
         avg_per_item = total_ms / len(contents)
 
         assert len(results) == len(contents)
-        assert avg_per_item < 60, (
-            f"Average {avg_per_item:.1f}ms/item exceeds 60ms target"
-        )
+        assert (
+            avg_per_item < 60
+        ), f"Average {avg_per_item:.1f}ms/item exceeds 60ms target"
 
     @pytest.mark.asyncio
     async def test_batch_returns_all_results(self, initialized_router):
@@ -161,8 +161,7 @@ class TestEndToEndLatency:
         """Tier 1 E2E with mocked inference should be fast."""
         start = time.perf_counter()
         response = test_client_with_mocks.post(
-            "/moderate",
-            json={"content": "Good content"}
+            "/moderate", json={"content": "Good content"}
         )
         elapsed_ms = (time.perf_counter() - start) * 1000
 
@@ -178,8 +177,7 @@ class TestEndToEndLatency:
         for _ in range(5):
             start = time.perf_counter()
             response = test_client_with_mocks.post(
-                "/moderate",
-                json={"content": "Test content"}
+                "/moderate", json={"content": "Test content"}
             )
             elapsed_ms = (time.perf_counter() - start) * 1000
             latencies.append(elapsed_ms)
@@ -208,9 +206,9 @@ class TestRouterInitialization:
 
         # Initialization includes embedding all utterances
         # Should complete in < 60 seconds (generous for CI)
-        assert init_latency < 60000, (
-            f"Init took {init_latency:.0f}ms, too slow for production"
-        )
+        assert (
+            init_latency < 60000
+        ), f"Init took {init_latency:.0f}ms, too slow for production"
 
     @pytest.mark.asyncio
     async def test_routes_info_available(self, initialized_router):

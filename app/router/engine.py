@@ -44,6 +44,7 @@ class RouteChoice:
         fallback_used: Whether the default route was used due to low confidence
                       or no match
     """
+
     route_name: str | None
     confidence: float
     latency_ms: float
@@ -59,7 +60,7 @@ class RouteChoice:
             "route_name": self.route_name,
             "confidence": round(self.confidence, 4),
             "latency_ms": round(self.latency_ms, 2),
-            "fallback_used": self.fallback_used
+            "fallback_used": self.fallback_used,
         }
 
 
@@ -132,7 +133,7 @@ class RouterEngine:
             self._router = SemanticRouter(
                 encoder=self._encoder,
                 routes=routes,
-                auto_sync="local"  # Use local index for in-memory routing
+                auto_sync="local",  # Use local index for in-memory routing
             )
 
             self._init_latency_ms = (time.perf_counter() - start_time) * 1000
@@ -151,9 +152,7 @@ class RouterEngine:
             RuntimeError: If engine has not been initialized
         """
         if not self._initialized or self._router is None:
-            raise RuntimeError(
-                "RouterEngine not initialized. Call initialize() first."
-            )
+            raise RuntimeError("RouterEngine not initialized. Call initialize() first.")
 
     def _check_pattern_filters(self, content: str) -> RouteChoice | None:
         """
@@ -171,36 +170,46 @@ class RouterEngine:
         Returns:
             RouteChoice if a pattern matches, None otherwise
         """
-        content_lower = content.lower()
-
         # Pattern 1: Negation-based sarcasm (positive word + NOT)
-        if re.search(r'\b(nice|great|perfect|wonderful|excellent|brilliant|genius)\b.*\bNOT\b', content, re.IGNORECASE):
-            logger.debug(f"Pattern filter matched: negation sarcasm")
+        if re.search(
+            r"\b(nice|great|perfect|wonderful|excellent|brilliant|genius)\b.*\bNOT\b",
+            content,
+            re.IGNORECASE,
+        ):
+            logger.debug("Pattern filter matched: negation sarcasm")
             return RouteChoice(
                 route_name="ambiguous_risk",
                 confidence=0.85,
                 latency_ms=0.1,
-                fallback_used=False
+                fallback_used=False,
             )
 
         # Pattern 2: Compound sarcasm (thanks/great + negative action)
-        if re.search(r'\b(thanks|thank you|great job|perfect|wonderful)\b.*\b(ruining|breaking|messing|destroying|wasting)\b', content, re.IGNORECASE):
-            logger.debug(f"Pattern filter matched: compound sarcasm")
+        if re.search(
+            r"\b(thanks|thank you|great job|perfect|wonderful)\b.*\b(ruining|breaking|messing|destroying|wasting)\b",
+            content,
+            re.IGNORECASE,
+        ):
+            logger.debug("Pattern filter matched: compound sarcasm")
             return RouteChoice(
                 route_name="ambiguous_risk",
                 confidence=0.82,
                 latency_ms=0.1,
-                fallback_used=False
+                fallback_used=False,
             )
 
         # Pattern 3: Conditional sarcasm (sure/yeah + because + past tense)
-        if re.search(r'\b(sure|yeah|right|oh yeah|oh sure)\b[,.]?\s*(because|since)\b.*\b(worked|works|helped|helps|went)\b', content, re.IGNORECASE):
-            logger.debug(f"Pattern filter matched: conditional sarcasm")
+        if re.search(
+            r"\b(sure|yeah|right|oh yeah|oh sure)\b[,.]?\s*(because|since)\b.*\b(worked|works|helped|helps|went)\b",
+            content,
+            re.IGNORECASE,
+        ):
+            logger.debug("Pattern filter matched: conditional sarcasm")
             return RouteChoice(
                 route_name="ambiguous_risk",
                 confidence=0.80,
                 latency_ms=0.1,
-                fallback_used=False
+                fallback_used=False,
             )
 
         return None
@@ -253,17 +262,23 @@ class RouterEngine:
                     route_name=self._settings.default_route,
                     confidence=0.0,
                     latency_ms=latency_ms,
-                    fallback_used=True
+                    fallback_used=True,
                 )
 
             # Extract confidence (similarity score) if available
             # The semantic-router library uses 'similarity_score' as the attribute name
             confidence = 0.0
-            if hasattr(route_result, 'similarity_score') and route_result.similarity_score is not None:
+            if (
+                hasattr(route_result, "similarity_score")
+                and route_result.similarity_score is not None
+            ):
                 confidence = float(route_result.similarity_score)
-            elif hasattr(route_result, 'similarity') and route_result.similarity is not None:
+            elif (
+                hasattr(route_result, "similarity")
+                and route_result.similarity is not None
+            ):
                 confidence = float(route_result.similarity)
-            elif hasattr(route_result, 'score') and route_result.score is not None:
+            elif hasattr(route_result, "score") and route_result.score is not None:
                 confidence = float(route_result.score)
 
             logger.debug(
@@ -275,7 +290,7 @@ class RouterEngine:
                 route_name=route_result.name,
                 confidence=confidence,
                 latency_ms=latency_ms,
-                fallback_used=False
+                fallback_used=False,
             )
 
         except Exception as e:
@@ -287,7 +302,7 @@ class RouterEngine:
                 route_name=self._settings.default_route,
                 confidence=0.0,
                 latency_ms=latency_ms,
-                fallback_used=True
+                fallback_used=True,
             )
 
     async def route_batch(self, contents: list[str]) -> list[RouteChoice]:
@@ -340,15 +355,17 @@ class RouterEngine:
             "routes": [
                 {
                     "name": r.name,
-                    "description": getattr(r, 'description', ''),
-                    "num_utterances": len(r.utterances) if hasattr(r, 'utterances') else 0
+                    "description": getattr(r, "description", ""),
+                    "num_utterances": (
+                        len(r.utterances) if hasattr(r, "utterances") else 0
+                    ),
                 }
                 for r in self._router.routes
             ],
             "encoder": self._settings.embedding_model,
             "threshold": self._settings.similarity_threshold,
             "default_route": self._settings.default_route,
-            "init_latency_ms": round(self._init_latency_ms, 2)
+            "init_latency_ms": round(self._init_latency_ms, 2),
         }
 
 

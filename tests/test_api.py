@@ -15,9 +15,6 @@ Test Categories:
 See: docs/09-testing.md for detailed test specifications.
 """
 
-import pytest
-from unittest.mock import patch, AsyncMock, MagicMock
-
 
 
 class TestModerateEndpoint:
@@ -26,8 +23,7 @@ class TestModerateEndpoint:
     def test_moderate_valid_request(self, test_client_with_mocks):
         """Valid request returns 200 with moderation response."""
         response = test_client_with_mocks.post(
-            "/moderate",
-            json={"content": "Great article!"}
+            "/moderate", json={"content": "Great article!"}
         )
 
         assert response.status_code == 200
@@ -43,8 +39,7 @@ class TestModerateEndpoint:
     def test_moderate_response_structure(self, test_client_with_mocks):
         """Verify complete response structure."""
         response = test_client_with_mocks.post(
-            "/moderate",
-            json={"content": "Test content"}
+            "/moderate", json={"content": "Test content"}
         )
 
         assert response.status_code == 200
@@ -65,38 +60,26 @@ class TestModerateEndpoint:
 
     def test_moderate_empty_content_returns_422(self, test_client):
         """Empty content returns validation error."""
-        response = test_client.post(
-            "/moderate",
-            json={"content": ""}
-        )
+        response = test_client.post("/moderate", json={"content": ""})
 
         assert response.status_code == 422
 
     def test_moderate_whitespace_only_rejected(self, test_client):
         """Whitespace-only content is rejected."""
-        response = test_client.post(
-            "/moderate",
-            json={"content": "   \n\t  "}
-        )
+        response = test_client.post("/moderate", json={"content": "   \n\t  "})
 
         # Should be rejected as effectively empty
         assert response.status_code == 422
 
     def test_moderate_content_too_long(self, test_client):
         """Content exceeding 10000 chars returns 422."""
-        response = test_client.post(
-            "/moderate",
-            json={"content": "x" * 10001}
-        )
+        response = test_client.post("/moderate", json={"content": "x" * 10001})
 
         assert response.status_code == 422
 
     def test_moderate_missing_content_field(self, test_client):
         """Missing content field returns 422."""
-        response = test_client.post(
-            "/moderate",
-            json={}
-        )
+        response = test_client.post("/moderate", json={})
 
         assert response.status_code == 422
 
@@ -106,11 +89,8 @@ class TestModerateEndpoint:
             "/moderate",
             json={
                 "content": "Test content",
-                "metadata": {
-                    "source": "comments",
-                    "priority": "high"
-                }
-            }
+                "metadata": {"source": "comments", "priority": "high"},
+            },
         )
 
         assert response.status_code == 200
@@ -119,12 +99,7 @@ class TestModerateEndpoint:
         """Request with language hint processes correctly."""
         response = test_client_with_mocks.post(
             "/moderate",
-            json={
-                "content": "Bonjour",
-                "metadata": {
-                    "language_hint": "fr"
-                }
-            }
+            json={"content": "Bonjour", "metadata": {"language_hint": "fr"}},
         )
 
         assert response.status_code == 200
@@ -132,8 +107,7 @@ class TestModerateEndpoint:
     def test_moderate_verdict_values(self, test_client_with_mocks):
         """Verdict is one of the valid enum values."""
         response = test_client_with_mocks.post(
-            "/moderate",
-            json={"content": "Test content"}
+            "/moderate", json={"content": "Test content"}
         )
 
         assert response.status_code == 200
@@ -145,16 +119,13 @@ class TestModerateEndpoint:
     def test_moderate_confidence_range(self, test_client_with_mocks):
         """Confidence is within 0.0-1.0 range."""
         response = test_client_with_mocks.post(
-            "/moderate",
-            json={"content": "Test content"}
+            "/moderate", json={"content": "Test content"}
         )
 
         assert response.status_code == 200
         data = response.json()
 
         assert 0.0 <= data["confidence"] <= 1.0
-
-
 
 
 class TestHealthEndpoint:
@@ -199,8 +170,6 @@ class TestHealthEndpoint:
 
         assert "service" in data
         assert data["service"] == "sentinel-triage"
-
-
 
 
 class TestMetricsEndpoint:
@@ -249,8 +218,6 @@ class TestMetricsEndpoint:
         assert data["total_requests"] >= 0
 
 
-
-
 class TestModelsEndpoint:
     """Tests for /models endpoint."""
 
@@ -297,12 +264,10 @@ class TestModelsEndpoint:
             "obvious_safe",
             "ambiguous_risk",
             "system_attack",
-            "non_english"
+            "non_english",
         }
 
         assert set(data["route_mapping"].keys()) == expected_routes
-
-
 
 
 class TestRoutesEndpoint:
@@ -318,8 +283,6 @@ class TestRoutesEndpoint:
         assert "num_routes" in data or "routes" in data
 
 
-
-
 class TestRootEndpoint:
     """Tests for / root endpoint."""
 
@@ -333,17 +296,12 @@ class TestRootEndpoint:
         assert "name" in data or "service" in data
 
 
-
-
 class TestErrorHandling:
     """Tests for error response handling."""
 
     def test_validation_error_format(self, test_client):
         """Validation errors return proper error format."""
-        response = test_client.post(
-            "/moderate",
-            json={"content": ""}
-        )
+        response = test_client.post("/moderate", json={"content": ""})
 
         assert response.status_code == 422
         data = response.json()
@@ -354,9 +312,7 @@ class TestErrorHandling:
     def test_invalid_json_returns_422(self, test_client):
         """Invalid JSON body returns 422."""
         response = test_client.post(
-            "/moderate",
-            data="not json",
-            headers={"Content-Type": "application/json"}
+            "/moderate", data="not json", headers={"Content-Type": "application/json"}
         )
 
         assert response.status_code == 422
@@ -366,7 +322,7 @@ class TestErrorHandling:
         response = test_client.post(
             "/moderate",
             data="content=test",
-            headers={"Content-Type": "application/x-www-form-urlencoded"}
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
         )
 
         assert response.status_code == 422
@@ -382,8 +338,6 @@ class TestErrorHandling:
         response = test_client.get("/nonexistent")
 
         assert response.status_code == 404
-
-
 
 
 class TestConfigEndpoint:
@@ -417,16 +371,13 @@ class TestConfigEndpoint:
         assert "gsk_" not in response_str
 
 
-
-
 class TestRouteOnlyEndpoint:
     """Tests for /route endpoint (routing without dispatch)."""
 
     def test_route_endpoint_returns_route(self, test_client_with_mocks):
         """Route endpoint returns routing decision only."""
         response = test_client_with_mocks.post(
-            "/route",
-            params={"content": "Test content"}
+            "/route", params={"content": "Test content"}
         )
 
         # May return 200 or other status depending on implementation

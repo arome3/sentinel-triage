@@ -82,7 +82,9 @@ async def lifespan(app: FastAPI):
     if settings.deepseek_api_key:
         logger.info("DeepSeek API key: configured")
     else:
-        logger.info("DeepSeek API key: not configured (using OpenAI fallback for Tier 2)")
+        logger.info(
+            "DeepSeek API key: not configured (using OpenAI fallback for Tier 2)"
+        )
 
     logger.info("Configuration validated successfully")
 
@@ -92,7 +94,7 @@ async def lifespan(app: FastAPI):
     engine = await get_router_engine()
     routes_info = engine.get_routes_info()
     logger.info(f"Router ready with {routes_info['num_routes']} routes:")
-    for route in routes_info['routes']:
+    for route in routes_info["routes"]:
         logger.info(f"  - {route['name']}: {route['num_utterances']} utterances")
     logger.info(f"Router initialization took {routes_info['init_latency_ms']:.2f}ms")
 
@@ -114,7 +116,7 @@ app = FastAPI(
     version="0.1.0",
     docs_url="/docs",
     redoc_url="/redoc",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -137,7 +139,7 @@ async def root():
         "version": "0.1.0",
         "docs": "/docs",
         "health": "/health",
-        "config": "/config"
+        "config": "/config",
     }
 
 
@@ -236,29 +238,31 @@ async def show_config(settings: Settings = Depends(get_settings)):
         "router": {
             "similarity_threshold": settings.similarity_threshold,
             "default_route": settings.default_route,
-            "fallback_model": settings.fallback_model
+            "fallback_model": settings.fallback_model,
         },
         "embedding": {
             "model": settings.embedding_model,
-            "dimensions": settings.embedding_dimensions
+            "dimensions": settings.embedding_dimensions,
         },
         "cost_tracking": {
             "enabled": settings.track_costs,
-            "gpt4o_baseline_per_1m": settings.gpt4o_cost_per_1m
+            "gpt4o_baseline_per_1m": settings.gpt4o_cost_per_1m,
         },
         "server": {
             "host": settings.host,
             "port": settings.port,
-            "debug": settings.debug
+            "debug": settings.debug,
         },
-        "logging": {
-            "level": settings.log_level
-        },
+        "logging": {"level": settings.log_level},
         "api_keys_configured": {
             "openai": bool(settings.openai_api_key.get_secret_value()),
             "groq": bool(settings.groq_api_key.get_secret_value()),
-            "deepseek": bool(settings.deepseek_api_key.get_secret_value() if settings.deepseek_api_key else False)
-        }
+            "deepseek": bool(
+                settings.deepseek_api_key.get_secret_value()
+                if settings.deepseek_api_key
+                else False
+            ),
+        },
     }
 
 
@@ -322,7 +326,7 @@ async def test_route(
         description="The text content to classify",
         min_length=1,
         max_length=10000,
-        examples=["You are an idiot", "Great post, thanks!", "Bonjour, comment ca va?"]
+        examples=["You are an idiot", "Great post, thanks!", "Bonjour, comment ca va?"],
     )
 ):
     """
@@ -352,7 +356,7 @@ async def test_route(
         "route": result.route_name,
         "confidence": round(result.confidence, 4),
         "latency_ms": round(result.latency_ms, 2),
-        "fallback_used": result.fallback_used
+        "fallback_used": result.fallback_used,
     }
 
 
@@ -394,7 +398,9 @@ async def moderate_content(request: ModerationRequest):
         route_choice = await engine.route(request.content)
 
         # Step 2: Dispatch to model
-        dispatch_result = await dispatch_by_route(route_choice.route_name, request.content)
+        dispatch_result = await dispatch_by_route(
+            route_choice.route_name, request.content
+        )
 
         if not dispatch_result.success:
             logger.error(f"Dispatch failed: {dispatch_result.error}")
@@ -430,28 +436,34 @@ async def moderate_content(request: ModerationRequest):
         )
 
         if settings.track_costs:
-            from app.metrics import get_metrics_store, get_cost_calculator, RequestMetric
+            from app.metrics import (
+                get_metrics_store,
+                get_cost_calculator,
+                RequestMetric,
+            )
 
             cost_breakdown = get_cost_calculator().calculate_by_model_id(
                 model_id=dispatch_result.model_used,
                 input_tokens=dispatch_result.tokens.input_tokens,
-                output_tokens=dispatch_result.tokens.output_tokens
+                output_tokens=dispatch_result.tokens.output_tokens,
             )
 
             if cost_breakdown:
-                get_metrics_store().record(RequestMetric(
-                    timestamp=time.time(),
-                    route_name=route_choice.route_name,
-                    model_id=dispatch_result.model_used,
-                    route_confidence=route_choice.confidence,
-                    routing_latency_ms=route_choice.latency_ms,
-                    inference_latency_ms=dispatch_result.latency_ms,
-                    input_tokens=dispatch_result.tokens.input_tokens,
-                    output_tokens=dispatch_result.tokens.output_tokens,
-                    actual_cost_usd=cost_breakdown.actual_cost_usd,
-                    hypothetical_cost_usd=cost_breakdown.hypothetical_cost_usd,
-                    verdict=dispatch_result.verdict
-                ))
+                get_metrics_store().record(
+                    RequestMetric(
+                        timestamp=time.time(),
+                        route_name=route_choice.route_name,
+                        model_id=dispatch_result.model_used,
+                        route_confidence=route_choice.confidence,
+                        routing_latency_ms=route_choice.latency_ms,
+                        inference_latency_ms=dispatch_result.latency_ms,
+                        input_tokens=dispatch_result.tokens.input_tokens,
+                        output_tokens=dispatch_result.tokens.output_tokens,
+                        actual_cost_usd=cost_breakdown.actual_cost_usd,
+                        hypothetical_cost_usd=cost_breakdown.hypothetical_cost_usd,
+                        verdict=dispatch_result.verdict,
+                    )
+                )
 
         return response
 
@@ -514,9 +526,7 @@ async def validation_exception_handler(
 
 
 @app.exception_handler(HTTPException)
-async def http_exception_handler(
-    request: Request, exc: HTTPException
-) -> JSONResponse:
+async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
     """
     Handle HTTP exceptions with consistent format.
 
@@ -533,9 +543,7 @@ async def http_exception_handler(
 
 
 @app.exception_handler(Exception)
-async def general_exception_handler(
-    request: Request, exc: Exception
-) -> JSONResponse:
+async def general_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     """
     Handle unexpected exceptions.
 
