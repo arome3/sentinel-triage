@@ -18,8 +18,6 @@ Guidelines for utterances:
     2. Cover variations in phrasing and tone
     3. Include edge cases that should match
     4. Avoid overlap between routes
-
-See: docs/03-semantic-routes.md for detailed documentation.
 """
 
 from semantic_router import Route
@@ -305,15 +303,9 @@ def get_route_names() -> list[str]:
     - The route selection in the router engine
 
     Returns:
-        list[str]: List of 5 route name strings.
+        list[str]: List of route name strings derived from create_routes().
     """
-    return [
-        "obvious_harm",
-        "obvious_safe",
-        "ambiguous_risk",
-        "system_attack",
-        "non_english",
-    ]
+    return [route.name for route in create_routes()]
 
 
 ROUTE_CHARACTERISTICS: dict[str, dict[str, str]] = {

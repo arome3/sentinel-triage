@@ -13,8 +13,6 @@ Performance Requirements:
     - Routing Decision Latency: < 50ms (guaranteed with local inference)
     - Embedding Inference: ~15-25ms (local CPU, ONNX Runtime)
     - Route Comparison: < 5ms
-
-See: docs/04-router-engine.md for detailed documentation.
 """
 
 import re

@@ -6,8 +6,6 @@ pydantic-settings for type-safe configuration management.
 
 Environment variables are loaded from .env file or system environment.
 All sensitive values use SecretStr to prevent accidental logging.
-
-See: docs/01-configuration.md for detailed documentation.
 """
 
 from functools import lru_cache
@@ -51,7 +49,7 @@ class Settings(BaseSettings):
     )
 
     similarity_threshold: float = Field(
-        default=0.5,
+        default=0.7,
         ge=0.0,
         le=1.0,
         description="Minimum similarity score for route matching (0.0-1.0)",
