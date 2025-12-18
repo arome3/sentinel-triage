@@ -321,3 +321,11 @@ The project validates success through:
 | **Latency Compliance** | Router decision <50ms | Guaranteed with local embeddings |
 
 ---
+
+## More on Model Router
+
+For a deeper dive into the model router architecture and the blueprint behind this system, check out this article:
+
+- [The Model Router Blueprint](https://medium.com/@legendabrahamonoja/the-model-router-blueprint-fd37d78e601d)
+
+---
