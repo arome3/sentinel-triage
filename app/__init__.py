@@ -6,4 +6,6 @@ to intelligently direct user-generated content to the most appropriate
 AI model based on intent, risk level, and language.
 """
 
-__version__ = "0.1.0"
+__version__ = "1.0.0"
+
+version_info: tuple[int, int, int] = tuple(int(p) for p in __version__.split("."))  # type: ignore[assignment]
