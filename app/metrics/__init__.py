@@ -71,7 +71,6 @@ from app.metrics.reporter import (
     get_reporter,
 )
 
-
 __all__ = [
     # Cost calculation
     "CostCalculator",
