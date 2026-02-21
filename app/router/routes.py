@@ -22,7 +22,6 @@ Guidelines for utterances:
 
 from semantic_router import Route
 
-
 OBVIOUS_HARM_UTTERANCES: list[str] = [
     # Spam patterns
     "This is a scam",
