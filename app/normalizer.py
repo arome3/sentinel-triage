@@ -12,22 +12,21 @@ import unicodedata
 
 # Curly/smart quotes -> straight ASCII quotes
 _SMART_QUOTES = str.maketrans(
-    "‘’“”",  # ‘ ’ “ ”
+    "\u2018\u2019\u201c\u201d",  # ' ' \u201c \u201d
     "''\"\"",  # ' ' " "
 )
 
 # En/em dashes -> ASCII hyphen
 _DASHES = str.maketrans(
-    "–—",  # – —
+    "\u2013\u2014",  # en-dash em-dash
     "--",
 )
 
 # Horizontal ellipsis -> three dots
-_ELLIPSIS_RE = re.compile("…")
+_ELLIPSIS_RE = re.compile("\u2026")
 
 # Multiple consecutive newlines -> double newline
-_MULTI_NEWLINE_RE = re.compile(r"
-{3,}")
+_MULTI_NEWLINE_RE = re.compile(r"\n{3,}")
 
 
 def normalize_text(text: str) -> str:
@@ -63,9 +62,7 @@ def normalize_text(text: str) -> str:
     text = _ELLIPSIS_RE.sub("...", text)
 
     # 5. Collapse excessive newlines
-    text = _MULTI_NEWLINE_RE.sub("
-
-", text)
+    text = _MULTI_NEWLINE_RE.sub("\n\n", text)
 
     # 6. Strip outer whitespace
     return text.strip()
