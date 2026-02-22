@@ -23,26 +23,44 @@ _EXCESSIVE_WHITESPACE_RE = re.compile(
     r"[ \t]{3,}",
 )
 
+#: Default maximum input length (characters).  Inputs longer than this are
+#: truncated *before* any regex processing to bound worst-case CPU time.
+DEFAULT_MAX_LENGTH: int = 10_000
 
-def sanitize_content(text: str) -> str:
+
+def sanitize_content(text: str, *, max_length: int = DEFAULT_MAX_LENGTH) -> str:
     """Sanitize user content for safe downstream processing.
 
     Applies the following transformations in order:
 
-    1. Strip ANSI escape sequences
-    2. Strip ASCII control characters (except tab and newline)
-    3. Apply Unicode NFC normalization
-    4. Collapse runs of 3+ horizontal whitespace to a single space
-    5. Strip leading/trailing whitespace
+    1. Truncate to *max_length* characters (prevents regex DoS on huge input)
+    2. Strip ANSI escape sequences
+    3. Strip ASCII control characters (except tab and newline)
+    4. Apply Unicode NFC normalization
+    5. Collapse runs of 3+ horizontal whitespace to a single space
+    6. Strip leading/trailing whitespace
 
     This function is pure: no side effects, no I/O.
 
     Args:
         text: Raw user content string.
+        max_length: Maximum number of characters to retain.  Defaults to
+            :data:`DEFAULT_MAX_LENGTH` (10 000).  Pass ``0`` to disable
+            truncation.
 
     Returns:
         Sanitized content string.
+
+    Raises:
+        ValueError: If *max_length* is negative.
     """
+    if max_length < 0:
+        raise ValueError(f"max_length must be >= 0, got {max_length}")
+
+    # 0. Truncate oversized input
+    if max_length and len(text) > max_length:
+        text = text[:max_length]
+
     # 1. Remove ANSI escape sequences
     text = _ANSI_ESCAPE_RE.sub("", text)
 

@@ -3,8 +3,7 @@
 import unicodedata
 
 import pytest
-
-from app.sanitize import sanitize_content
+from app.sanitize import DEFAULT_MAX_LENGTH, sanitize_content
 
 
 class TestSanitizeContent:
@@ -121,3 +120,52 @@ class TestSanitizeContent:
         """Calling twice with same input yields same output."""
         text = "\x1b[31m\x00test\x07   data"
         assert sanitize_content(text) == sanitize_content(text)
+
+
+class TestMaxLength:
+    """Tests for the max_length truncation parameter."""
+
+    def test_default_max_length_constant(self):
+        """DEFAULT_MAX_LENGTH is 10_000."""
+        assert DEFAULT_MAX_LENGTH == 10_000
+
+    def test_short_input_not_truncated(self):
+        """Input shorter than max_length passes through fully."""
+        text = "short"
+        assert sanitize_content(text) == text
+
+    def test_exact_max_length_not_truncated(self):
+        """Input exactly at max_length is not truncated."""
+        text = "a" * 100
+        assert sanitize_content(text, max_length=100) == text
+
+    def test_oversized_input_truncated(self):
+        """Input exceeding max_length is truncated."""
+        text = "a" * 200
+        result = sanitize_content(text, max_length=50)
+        assert len(result) == 50
+        assert result == "a" * 50
+
+    def test_truncation_before_sanitization(self):
+        """Truncation happens before other processing steps."""
+        # 5 chars of content + control char at position 6
+        text = "hello\x00world"
+        result = sanitize_content(text, max_length=5)
+        assert result == "hello"
+
+    def test_max_length_zero_disables_truncation(self):
+        """max_length=0 disables truncation entirely."""
+        text = "a" * 20_000
+        result = sanitize_content(text, max_length=0)
+        assert len(result) == 20_000
+
+    def test_negative_max_length_raises(self):
+        """Negative max_length raises ValueError."""
+        with pytest.raises(ValueError, match="max_length must be >= 0"):
+            sanitize_content("test", max_length=-1)
+
+    def test_default_truncates_at_10000(self):
+        """Default max_length truncates at 10_000 characters."""
+        text = "x" * 15_000
+        result = sanitize_content(text)
+        assert len(result) == 10_000
