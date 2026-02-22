@@ -254,7 +254,9 @@ def test_client():
     # This is critical because Python's import creates local bindings
     with (
         patch("app.main.ensure_router_initialized", new_callable=AsyncMock),
-        patch("app.main.get_router_engine", new_callable=AsyncMock) as mock_get_engine,
+        patch(
+            "app.main.get_router_engine", new_callable=AsyncMock
+        ) as mock_get_engine,
     ):
         mock_get_engine.return_value = _create_mock_engine()
 
@@ -283,8 +285,12 @@ def test_client_with_mocks(mock_route_result, mock_dispatch_result):
     # Patch at the module where the functions are CALLED from (app.main)
     with (
         patch("app.main.ensure_router_initialized", new_callable=AsyncMock),
-        patch("app.main.get_router_engine", new_callable=AsyncMock) as mock_get_engine,
-        patch("app.main.dispatch_by_route", new_callable=AsyncMock) as mock_dispatch,
+        patch(
+            "app.main.get_router_engine", new_callable=AsyncMock
+        ) as mock_get_engine,
+        patch(
+            "app.main.dispatch_by_route", new_callable=AsyncMock
+        ) as mock_dispatch,
     ):
         mock_get_engine.return_value = _create_mock_engine(
             mock_route_result("obvious_safe")
