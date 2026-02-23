@@ -102,3 +102,11 @@ class TestClassifyContent:
         for text in texts:
             result = classify_content(text)
             assert result.label in Classification.LABELS
+
+    def test_multiple_urgent_keywords_high_confidence(self):
+        """Multiple urgent keywords yield full confidence."""
+        result = classify_content(
+            "This is urgent, an emergency requiring critical and immediate action"
+        )
+        assert result.label == "urgent"
+        assert result.confidence == 1.0
