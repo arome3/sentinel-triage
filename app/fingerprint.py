@@ -38,13 +38,13 @@ def content_fingerprint(text: str) -> str:
 def batch_fingerprint(texts: list[str]) -> list[str]:
     """Produce fingerprints for multiple texts in one call.
 
-    Returns fingerprints in the same order as the input list.
-    Equivalent to ``[content_fingerprint(t) for t in texts]``.
+    Applies :func:`content_fingerprint` to each element and returns
+    fingerprints in the same order as the input list.
 
     Args:
         texts: List of raw user content strings.
 
     Returns:
-        List of 64-character lowercase hex strings.
+        List of 64-character lowercase hex strings (SHA-256 digests).
     """
     return [content_fingerprint(t) for t in texts]
