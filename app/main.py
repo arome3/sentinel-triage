@@ -49,9 +49,7 @@ _start_time: float = 0.0
 # defaults to localhost for development safety.
 _DEFAULT_ORIGINS = ["http://localhost:3000", "http://localhost:8000"]
 _CORS_ORIGINS: list[str] = [
-    o.strip()
-    for o in os.environ.get("CORS_ORIGINS", "").split(",")
-    if o.strip()
+    o.strip() for o in os.environ.get("CORS_ORIGINS", "").split(",") if o.strip()
 ] or _DEFAULT_ORIGINS
 
 
