@@ -17,6 +17,7 @@ The application uses a lifespan context manager to:
 
 from contextlib import asynccontextmanager
 import logging
+import os
 import time
 
 from fastapi import FastAPI, Depends, Query, HTTPException, Request
@@ -43,6 +44,15 @@ from app.schemas.moderation import (
 logger = logging.getLogger(__name__)
 
 _start_time: float = 0.0
+
+# CORS allowed origins — read from CORS_ORIGINS env var (comma-separated),
+# defaults to localhost for development safety.
+_DEFAULT_ORIGINS = ["http://localhost:3000", "http://localhost:8000"]
+_CORS_ORIGINS: list[str] = [
+    o.strip()
+    for o in os.environ.get("CORS_ORIGINS", "").split(",")
+    if o.strip()
+] or _DEFAULT_ORIGINS
 
 
 @asynccontextmanager
@@ -121,7 +131,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Restrict in production
+    allow_origins=_CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
