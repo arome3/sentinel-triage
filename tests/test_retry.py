@@ -4,7 +4,6 @@ import pytest
 
 from app.retry import (
     DEFAULT_BASE_DELAY,
-    DEFAULT_MAX_DELAY,
     RetryExhaustedError,
     compute_delay,
     retry,
