@@ -6,6 +6,8 @@ only in whitespace, casing, smart quotes, or control characters) maps to
 the same fingerprint.
 """
 
+from __future__ import annotations
+
 import hashlib
 
 from app.normalizer import normalize_text
@@ -31,3 +33,18 @@ def content_fingerprint(text: str) -> str:
     normalized = normalize_text(cleaned)
     lowered = normalized.lower()
     return hashlib.sha256(lowered.encode("utf-8")).hexdigest()
+
+
+def batch_fingerprint(texts: list[str]) -> list[str]:
+    """Produce fingerprints for multiple texts in one call.
+
+    Returns fingerprints in the same order as the input list.
+    Equivalent to ``[content_fingerprint(t) for t in texts]``.
+
+    Args:
+        texts: List of raw user content strings.
+
+    Returns:
+        List of 64-character lowercase hex strings.
+    """
+    return [content_fingerprint(t) for t in texts]

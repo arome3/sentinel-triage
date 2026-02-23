@@ -2,7 +2,7 @@
 
 import hashlib
 
-from app.fingerprint import content_fingerprint
+from app.fingerprint import batch_fingerprint, content_fingerprint
 
 
 class TestContentFingerprint:
@@ -63,3 +63,32 @@ class TestContentFingerprint:
     def test_different_content_different_fingerprint(self):
         """Different content produces different fingerprints."""
         assert content_fingerprint("alpha") != content_fingerprint("beta")
+
+
+class TestBatchFingerprint:
+    """Unit tests for batch_fingerprint()."""
+
+    def test_batch_matches_individual(self):
+        """Batch results match individual calls."""
+        texts = ["hello", "world", "test"]
+        batch = batch_fingerprint(texts)
+        individual = [content_fingerprint(t) for t in texts]
+        assert batch == individual
+
+    def test_batch_preserves_order(self):
+        """Results are in the same order as inputs."""
+        texts = ["beta", "alpha", "gamma"]
+        result = batch_fingerprint(texts)
+        assert result[0] == content_fingerprint("beta")
+        assert result[1] == content_fingerprint("alpha")
+        assert result[2] == content_fingerprint("gamma")
+
+    def test_batch_empty_list(self):
+        """Empty input list returns empty output list."""
+        assert batch_fingerprint([]) == []
+
+    def test_batch_single_item(self):
+        """Single-item list works correctly."""
+        result = batch_fingerprint(["only"])
+        assert len(result) == 1
+        assert result[0] == content_fingerprint("only")
