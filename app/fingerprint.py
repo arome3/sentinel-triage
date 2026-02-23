@@ -1,0 +1,33 @@
+"""Content fingerprinting utility for deduplication.
+
+Chains sanitization and normalization to produce a deterministic SHA-256
+fingerprint for any input text.  Semantically equivalent content (differing
+only in whitespace, casing, smart quotes, or control characters) maps to
+the same fingerprint.
+"""
+
+import hashlib
+
+from app.normalizer import normalize_text
+from app.sanitize import sanitize_content
+
+
+def content_fingerprint(text: str) -> str:
+    """Produce a deterministic SHA-256 hex fingerprint for *text*.
+
+    Processing pipeline:
+    1. ``sanitize_content()`` -- strip control chars, ANSI escapes, truncate
+    2. ``normalize_text()`` -- smart quotes, dashes, ellipsis, newlines
+    3. Lowercase -- case-insensitive matching
+    4. SHA-256 hex digest
+
+    Args:
+        text: Raw user content.
+
+    Returns:
+        64-character lowercase hex string (SHA-256 digest).
+    """
+    cleaned = sanitize_content(text)
+    normalized = normalize_text(cleaned)
+    lowered = normalized.lower()
+    return hashlib.sha256(lowered.encode("utf-8")).hexdigest()
