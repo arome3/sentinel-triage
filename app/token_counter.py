@@ -33,6 +33,17 @@ class TokenEstimate:
     cost_tier: str
 
 
+def _classify_tier(estimated: int) -> str:
+    """Map an estimated token count to its cost tier."""
+    if estimated < TIER_SHORT:
+        return "short"
+    if estimated < TIER_MEDIUM:
+        return "medium"
+    if estimated < TIER_LONG:
+        return "long"
+    return "very_long"
+
+
 def estimate_tokens(text: str) -> TokenEstimate:
     """Estimate the token count for a text string.
 
@@ -56,20 +67,11 @@ def estimate_tokens(text: str) -> TokenEstimate:
     word_count = len(words)
     estimated = int(word_count * TOKENS_PER_WORD + 0.5)  # round up
 
-    if estimated < TIER_SHORT:
-        tier = "short"
-    elif estimated < TIER_MEDIUM:
-        tier = "medium"
-    elif estimated < TIER_LONG:
-        tier = "long"
-    else:
-        tier = "very_long"
-
     return TokenEstimate(
         text_length=len(text),
         word_count=word_count,
         estimated_tokens=estimated,
-        cost_tier=tier,
+        cost_tier=_classify_tier(estimated),
     )
 
 
