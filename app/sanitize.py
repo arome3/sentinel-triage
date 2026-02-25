@@ -18,6 +18,30 @@ _ANSI_ESCAPE_RE = re.compile(
     r"\x1b\[[0-9;]*[A-Za-z]",
 )
 
+# Zero-width and invisible formatting characters that can be injected
+# between graphemes to evade pattern-matching without changing visual output.
+_ZERO_WIDTH_RE = re.compile(
+    "["
+    "\u200b"  # ZERO WIDTH SPACE
+    "\u200c"  # ZERO WIDTH NON-JOINER
+    "\u200d"  # ZERO WIDTH JOINER
+    "\u2060"  # WORD JOINER
+    "\ufeff"  # ZERO WIDTH NO-BREAK SPACE (BOM)
+    "\u00ad"  # SOFT HYPHEN
+    "\u200e"  # LEFT-TO-RIGHT MARK
+    "\u200f"  # RIGHT-TO-LEFT MARK
+    "\u202a"  # LEFT-TO-RIGHT EMBEDDING
+    "\u202b"  # RIGHT-TO-LEFT EMBEDDING
+    "\u202c"  # POP DIRECTIONAL FORMATTING
+    "\u202d"  # LEFT-TO-RIGHT OVERRIDE
+    "\u202e"  # RIGHT-TO-LEFT OVERRIDE
+    "\u2066"  # LEFT-TO-RIGHT ISOLATE
+    "\u2067"  # RIGHT-TO-LEFT ISOLATE
+    "\u2068"  # FIRST STRONG ISOLATE
+    "\u2069"  # POP DIRECTIONAL ISOLATE
+    "]",
+)
+
 # Three or more whitespace characters in a row
 _EXCESSIVE_WHITESPACE_RE = re.compile(
     r"[ \t]{3,}",
@@ -35,10 +59,11 @@ def sanitize_content(text: str, *, max_length: int = DEFAULT_MAX_LENGTH) -> str:
 
     1. Truncate to *max_length* characters (prevents regex DoS on huge input)
     2. Strip ANSI escape sequences
-    3. Strip ASCII control characters (except tab and newline)
-    4. Apply Unicode NFC normalization
-    5. Collapse runs of 3+ horizontal whitespace to a single space
-    6. Strip leading/trailing whitespace
+    3. Strip zero-width and invisible formatting characters
+    4. Strip ASCII control characters (except tab and newline)
+    5. Apply Unicode NFC normalization
+    6. Collapse runs of 3+ horizontal whitespace to a single space
+    7. Strip leading/trailing whitespace
 
     This function is pure: no side effects, no I/O.
 
@@ -64,14 +89,17 @@ def sanitize_content(text: str, *, max_length: int = DEFAULT_MAX_LENGTH) -> str:
     # 1. Remove ANSI escape sequences
     text = _ANSI_ESCAPE_RE.sub("", text)
 
-    # 2. Remove control characters (keep \t and \n)
+    # 2. Remove zero-width and invisible formatting characters
+    text = _ZERO_WIDTH_RE.sub("", text)
+
+    # 3. Remove control characters (keep \t and \n)
     text = _CONTROL_CHAR_RE.sub("", text)
 
-    # 3. Unicode NFC normalization
+    # 4. Unicode NFC normalization
     text = unicodedata.normalize("NFC", text)
 
-    # 4. Collapse excessive horizontal whitespace
+    # 5. Collapse excessive horizontal whitespace
     text = _EXCESSIVE_WHITESPACE_RE.sub(" ", text)
 
-    # 5. Strip leading/trailing whitespace
+    # 6. Strip leading/trailing whitespace
     return text.strip()
