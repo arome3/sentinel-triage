@@ -12,6 +12,7 @@ more capable models with larger context windows.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 
 #: Average tokens per word for English text (empirically ~1.3 for GPT models).
@@ -21,6 +22,10 @@ TOKENS_PER_WORD: float = 1.3
 TIER_SHORT: int = 100
 TIER_MEDIUM: int = 500
 TIER_LONG: int = 2000
+
+#: Pattern matching non-alphanumeric, non-whitespace characters.
+#: Each of these typically becomes its own token in BPE tokenizers.
+_SPECIAL_CHAR_RE = re.compile(r"[^\w\s]")
 
 
 @dataclass(frozen=True, slots=True)
@@ -44,12 +49,25 @@ def _classify_tier(estimated: int) -> str:
     return "very_long"
 
 
+def _count_special_chars(text: str) -> int:
+    """Count non-alphanumeric, non-whitespace characters.
+
+    LLM tokenizers (BPE) treat most punctuation and special characters
+    as individual tokens.  The word-based heuristic misses these because
+    ``str.split()`` groups them with adjacent words.
+    """
+    return len(_SPECIAL_CHAR_RE.findall(text))
+
+
 def estimate_tokens(text: str) -> TokenEstimate:
     """Estimate the token count for a text string.
 
-    Uses a word-based heuristic rather than a full tokenizer to avoid
-    adding heavy dependencies.  The estimate is intentionally conservative
-    (rounds up) to prevent under-budgeting.
+    Uses a word-based heuristic combined with a special-character
+    adjustment.  Each non-alphanumeric, non-whitespace character adds
+    approximately one extra token (BPE tokenizers split on punctuation).
+
+    The estimate is intentionally conservative (rounds up) to prevent
+    under-budgeting.
 
     Cost tiers:
     - ``"short"``: < 100 estimated tokens
@@ -65,7 +83,8 @@ def estimate_tokens(text: str) -> TokenEstimate:
     """
     words = text.split()
     word_count = len(words)
-    estimated = int(word_count * TOKENS_PER_WORD + 0.5)  # round up
+    special_chars = _count_special_chars(text)
+    estimated = int(word_count * TOKENS_PER_WORD + special_chars * 0.5 + 0.5)
 
     return TokenEstimate(
         text_length=len(text),
