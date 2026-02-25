@@ -68,3 +68,8 @@ class TestZeroWidthStripping:
         """Directional isolate characters (U+2066-U+2069) should be stripped."""
         text = "\u2066hidden\u2069"
         assert sanitize_content(text) == "hidden"
+
+    def test_mixed_with_normal_whitespace(self):
+        """Zero-width chars mixed with normal spaces are handled correctly."""
+        text = "hello \u200b world"
+        assert sanitize_content(text) == "hello  world"
